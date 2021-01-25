@@ -1,10 +1,6 @@
 ﻿using Orleans;
 using Orleans.Storage;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OrleansCassandraUtils.Persistence
 {
@@ -17,7 +13,7 @@ namespace OrleansCassandraUtils.Persistence
         }
 
         [RedactConnectionString]
-        public string ConnctionString { get; set; }
+        public string ConnectionString { get; set; }
 
         public int InitStage { get; set; } = ServiceLifecycleStage.ApplicationServices;
 

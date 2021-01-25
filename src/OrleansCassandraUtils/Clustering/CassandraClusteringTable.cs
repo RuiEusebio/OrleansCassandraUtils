@@ -2,11 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Orleans.Runtime;
-using Orleans.Runtime.Configuration;
-using Orleans.Messaging;
 using Cassandra;
 using OrleansCassandraUtils.Utils;
 using System.Net;
@@ -19,8 +16,7 @@ namespace OrleansCassandraUtils.Clustering
         CassandraClusteringOptions options;
         ISession session;
         OrleansQueries queries;
-
-
+        
         public CassandraClusteringTable(IOptions<CassandraClusteringOptions> options)
         {
             this.options = options.Value;

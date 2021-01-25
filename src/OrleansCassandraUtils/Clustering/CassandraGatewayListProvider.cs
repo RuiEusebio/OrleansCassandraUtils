@@ -1,16 +1,12 @@
 ﻿using Cassandra;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Messaging;
 using Orleans.Runtime;
-using Orleans.Runtime.Configuration;
 using OrleansCassandraUtils.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OrleansCassandraUtils.Clustering
@@ -22,12 +18,10 @@ namespace OrleansCassandraUtils.Clustering
         ISession session;
         OrleansQueries queries;
 
-
         TimeSpan IGatewayListProvider.MaxStaleness => maxStaleness;
 
         bool IGatewayListProvider.IsUpdatable => true;
-
-
+        
         public CassandraGatewayListProvider(IOptions<CassandraClusteringOptions> options, IOptions<GatewayOptions> gatewayOptions)
         {
             this.options = options.Value;

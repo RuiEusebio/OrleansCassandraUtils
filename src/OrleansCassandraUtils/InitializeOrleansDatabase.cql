@@ -1,13 +1,13 @@
 CREATE TABLE queries
 (
 	key ascii,
-	text ascii,
+	value ascii,
 	consistency_level ascii,
 	
 	PRIMARY KEY(key)
 ) WITH compression = {
 	'class' : 'LZ4Compressor',
-	'enabled' : true
+	'enabled' : 'true'
 };
 
 CREATE TABLE membership
@@ -51,7 +51,7 @@ CREATE TABLE reminder
 	'enabled' : true
 };
 
-CREATE TABLE storage
+CREATE TABLE grain
 (
     grain_type text,
     grain_id blob,
@@ -61,10 +61,10 @@ CREATE TABLE storage
     PRIMARY KEY((grain_type, grain_id))
 ) WITH compression = {
 	'class' : 'LZ4Compressor',
-	'enabled' : true
+	'enabled' : 'true'
 };
 
-insert into queries(key, consistency_level, text) values 
+insert into queries(key, consistency_level, value) values 
 (
 	'UpdateIAmAliveTimeKey','quorum','
 	UPDATE membership
@@ -77,7 +77,7 @@ insert into queries(key, consistency_level, text) values
 		AND generation = :generation;
 ');
 
-insert into queries(key, consistency_level, text) values 
+insert into queries(key, consistency_level, value) values 
 (
 	'InsertMembershipVersionKey','all','
 	INSERT INTO membership(
@@ -91,7 +91,7 @@ insert into queries(key, consistency_level, text) values
 	IF NOT EXISTS;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'InsertMembershipKey','all','
 	UPDATE membership
@@ -112,7 +112,7 @@ insert into queries(key, consistency_level, text) values
 		version = :expected_version;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'UpdateMembershipKey','all','
 	UPDATE membership
@@ -130,7 +130,7 @@ insert into queries(key, consistency_level, text) values
 		version = :expected_version;
 ');
 
-insert into queries(key, consistency_level, text) values 
+insert into queries(key, consistency_level, value) values 
 (
 	'DeleteMembershipEntryKey','one','
 	DELETE FROM 
@@ -142,7 +142,7 @@ insert into queries(key, consistency_level, text) values
 		AND generation = :generation;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'GatewaysQueryKey','one','
 	SELECT
@@ -158,7 +158,7 @@ insert into queries(key, consistency_level, text) values
 	ALLOW FILTERING;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'MembershipReadVersionKey','all','
 	SELECT
@@ -169,7 +169,7 @@ insert into queries(key, consistency_level, text) values
 		partition_key = 0;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'MembershipReadRowKey','all','
 	SELECT
@@ -190,7 +190,7 @@ insert into queries(key, consistency_level, text) values
 		AND generation = :generation;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'MembershipReadAllKey','all','
 	SELECT
@@ -209,13 +209,13 @@ insert into queries(key, consistency_level, text) values
 		membership;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'DeleteMembershipTableEntriesKey','all','
 	DELETE FROM membership WHERE partition_key = 0;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'UpsertReminderRowKey','quorum','
 	INSERT INTO reminder (
@@ -238,7 +238,7 @@ insert into queries(key, consistency_level, text) values
 	);
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'ReadReminderRowsKey','quorum','
 	SELECT
@@ -253,7 +253,7 @@ insert into queries(key, consistency_level, text) values
 		AND grain_id = :grain_id; 
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'ReadReminderRowKey','quorum','
 	SELECT
@@ -268,7 +268,7 @@ insert into queries(key, consistency_level, text) values
 		AND reminder_name = :reminder_name;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'ReadRemindersInsideRangeKey','quorum','
 	SELECT
@@ -284,7 +284,7 @@ insert into queries(key, consistency_level, text) values
 		AND grain_hash <= :grain_hash_end
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'ReadRemindersOutsideRangeKey1','quorum','
 	SELECT
@@ -298,7 +298,8 @@ insert into queries(key, consistency_level, text) values
 		partition IN :partitions
 		AND grain_hash > :grain_hash_start;
 ');
-insert into queries(key, consistency_level, text) values
+
+insert into queries(key, consistency_level, value) values
 (
 	'ReadRemindersOutsideRangeKey2','quorum','
 	SELECT
@@ -313,7 +314,7 @@ insert into queries(key, consistency_level, text) values
 		AND grain_hash <= :grain_hash_end;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'DeleteReminderRowKey','one','
 	DELETE FROM reminder
@@ -326,16 +327,16 @@ insert into queries(key, consistency_level, text) values
 		etag = :etag;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
 	'DeleteReminderRowsKey','one','
 	TRUNCATE reminder;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
-	'WriteToStorageKey','one','
-	UPDATE storage
+	'WriteToGrainKey','one','
+	UPDATE grain
 	SET
 		data = :data,
 		serializer_code = :serializer_code,
@@ -347,10 +348,10 @@ insert into queries(key, consistency_level, text) values
 		etag = :expected_etag;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
-	'ClearStorageKey','one','
-	DELETE FROM storage
+	'ClearGrainKey','one','
+	DELETE FROM grain
 	WHERE
 		grain_type = :grain_type
 		AND grain_id = :grain_id
@@ -358,14 +359,14 @@ insert into queries(key, consistency_level, text) values
 		etag = :expected_etag;
 ');
 
-insert into queries(key, consistency_level, text) values
+insert into queries(key, consistency_level, value) values
 (
-	'ReadFromStorageKey','one','
+	'ReadFromGrainKey','one','
 	SELECT 
 		data,
 		serializer_code,
 		etag 
-	FROM storage
+	FROM grain
 	WHERE
 		grain_type = :grain_type
 		AND grain_id = :grain_id;

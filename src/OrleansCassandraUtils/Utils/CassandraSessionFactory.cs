@@ -1,9 +1,6 @@
 ﻿using Cassandra;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OrleansCassandraUtils.Utils
@@ -12,7 +9,6 @@ namespace OrleansCassandraUtils.Utils
     {
         static object lockObj = new object();
         static Dictionary<string, Task<ISession>> sessionCache = new Dictionary<string, Task<ISession>>();
-
 
         public static Task<ISession> CreateSession(string connectionString)
         {

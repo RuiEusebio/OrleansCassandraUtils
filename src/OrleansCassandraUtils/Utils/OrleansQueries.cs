@@ -5,8 +5,6 @@ using OrleansCassandraUtils.Reminders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,7 +22,7 @@ namespace OrleansCassandraUtils.Utils
         const int reminderPartitionBits = 6;
 
         static SemaphoreSlim @lock = new SemaphoreSlim(1);
-        static string readQueriesCommand = "SELECT key, text, consistency_level FROM queries;";
+        static string readQueriesCommand = "SELECT key, value, consistency_level FROM queries;";
 
         static Dictionary<string, PreparedStatement> queries = null;
 
@@ -43,7 +41,7 @@ namespace OrleansCassandraUtils.Utils
                     foreach (var Row in queryRows)
                     {
 
-                        var statement = await session.PrepareAsync((string)Row["text"]);
+                        var statement = await session.PrepareAsync((string)Row["value"]);
                         statement.SetConsistencyLevel((ConsistencyLevel)Enum.Parse(typeof(ConsistencyLevel), (string)Row["consistency_level"], true));
                         dic.Add(Row["key"].ToString(), statement);
                     }
@@ -262,18 +260,18 @@ namespace OrleansCassandraUtils.Utils
             });
         }
 
-        public IStatement ReadFromStorage(string GrainType, byte[] GrainId)
+        public IStatement ReadFromGrain(string GrainType, byte[] GrainId)
         {
-            return queries["ReadFromStorageKey"].Bind(new
+            return queries["ReadFromGrainKey"].Bind(new
             {
                 grain_type = GrainType,
                 grain_id = GrainId
             });
         }
 
-        public IStatement WriteToStorage(string GrainType, byte[] GrainId, byte[] Data, sbyte SerializerCode, Guid NewETag, Guid? ExpectedETag)
+        public IStatement WriteToGrain(string GrainType, byte[] GrainId, byte[] Data, sbyte SerializerCode, Guid NewETag, Guid? ExpectedETag)
         {
-            return queries["WriteToStorageKey"].Bind(new
+            return queries["WriteToGrainKey"].Bind(new
             {
                 grain_type = GrainType,
                 grain_id = GrainId,
@@ -284,13 +282,23 @@ namespace OrleansCassandraUtils.Utils
             });
         }
 
-        public IStatement ClearStorage(string GrainType, byte[] GrainId, Guid ExpectedETag)
+        public IStatement ClearGrain(string GrainType, byte[] GrainId, Guid ExpectedETag)
         {
-            return queries["ClearStorageKey"].Bind(new
+            return queries["ClearGrainKey"].Bind(new
             {
                 grain_type = GrainType,
                 grain_id = GrainId,
                 expected_etag = ExpectedETag
+            });
+        }
+
+        public IStatement DeleteMembershipEntry(MembershipEntry membershipEntry)
+        {
+            return queries["DeleteMembershipEntryKey"].Bind(new
+            {
+                address = membershipEntry.SiloAddress.Endpoint.Address.ToString(),
+                port = membershipEntry.SiloAddress.Endpoint.Port,
+                generation = membershipEntry.SiloAddress.Generation
             });
         }
     }

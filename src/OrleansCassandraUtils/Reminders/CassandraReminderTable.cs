@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Orleans;
 using Orleans.Runtime;
-using Orleans.Runtime.Configuration;
 using OrleansCassandraUtils.Utils;
 using Cassandra;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace OrleansCassandraUtils.Reminders
@@ -19,8 +16,7 @@ namespace OrleansCassandraUtils.Reminders
         IGrainReferenceConversionProvider grainReferenceConversionProvider;
         ISession session;
         OrleansQueries queries;
-
-
+        
         public CassandraReminderTable(IGrainReferenceConverter grainReferenceConverter, IOptions<CassandraReminderTableOptions> options)
         {
             this.options = options.Value;

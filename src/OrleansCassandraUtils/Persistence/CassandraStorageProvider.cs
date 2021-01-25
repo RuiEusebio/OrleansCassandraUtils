@@ -23,7 +23,7 @@ namespace OrleansCassandraUtils.Persistence
     {
         public static IGrainStorage Create(IServiceProvider services, string name)
         {
-            IOptionsSnapshot<CassandraGrainStorageOptions> optionsSnapshot = services.GetRequiredService<IOptionsSnapshot<CassandraGrainStorageOptions>>();
+            IOptionsMonitor<CassandraGrainStorageOptions> optionsSnapshot = services.GetRequiredService<IOptionsMonitor<CassandraGrainStorageOptions>>();
             return ActivatorUtilities.CreateInstance<CassandraGrainStorage>(services, Options.Create(optionsSnapshot.Get(name)), name);
         }
     }
@@ -62,7 +62,7 @@ namespace OrleansCassandraUtils.Persistence
 
         async Task Init(CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(options.ConnctionString))
+            if (string.IsNullOrEmpty(options.ConnectionString))
                 throw new BadProviderConfigException($"Connection string not specified for cassandra grain storage '{name}'.");
 
             foreach (var providerInfo in options.SerializationProviders.Values)
@@ -75,7 +75,7 @@ namespace OrleansCassandraUtils.Persistence
                     $"on top of Orleans serialization. This serializer does NOT support versioning. Specify " +
                     $"custom providers using `CassandraGrainStorageOptions.AddSerializationProvider`.");
 
-            session = await CassandraSessionFactory.CreateSession(options.ConnctionString);
+            session = await CassandraSessionFactory.CreateSession(options.ConnectionString);
             queries = await OrleansQueries.CreateInstance(session);
         }
 
@@ -169,7 +169,7 @@ namespace OrleansCassandraUtils.Persistence
             var typeInfo = GetTypeSerializationInfo(grainType, grainStateType);
             var keyBlob = GetKeyAsBlob(grainReference);
 
-            return session.ExecuteAsync(queries.ClearStorage(typeInfo.typeString, keyBlob, Guid.Parse(grainState.ETag)));
+            return session.ExecuteAsync(queries.ClearGrain(typeInfo.typeString, keyBlob, Guid.Parse(grainState.ETag)));
         }
 
         async Task IGrainStorage.ReadStateAsync(string grainType, GrainReference grainReference, IGrainState grainState)
@@ -178,7 +178,7 @@ namespace OrleansCassandraUtils.Persistence
             var typeInfo = GetTypeSerializationInfo(grainType, grainStateType);
             var keyBlob = GetKeyAsBlob(grainReference);
 
-            var rows = await session.ExecuteAsync(queries.ReadFromStorage(typeInfo.typeString, keyBlob));
+            var rows = await session.ExecuteAsync(queries.ReadFromGrain(typeInfo.typeString, keyBlob));
 
             var row = rows.FirstOrDefault();
 
@@ -212,7 +212,7 @@ namespace OrleansCassandraUtils.Persistence
             var newETag = Guid.NewGuid();
             var oldETag = string.IsNullOrEmpty(grainState.ETag) ? default(Guid?) : Guid.Parse(grainState.ETag);
 
-            var rows = await session.ExecuteAsync(queries.WriteToStorage(typeInfo.typeString, keyBlob, serializedData, (sbyte)typeInfo.providerInfo.code, newETag, oldETag));
+            var rows = await session.ExecuteAsync(queries.WriteToGrain(typeInfo.typeString, keyBlob, serializedData, (sbyte)typeInfo.providerInfo.code, newETag, oldETag));
 
             if (!((bool?)rows.FirstOrDefault()?["[applied]"] ?? false))
                 throw new InconsistentStateException($"Failed to write grain {grainReference} due to version mismatch");
